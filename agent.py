@@ -2,7 +2,8 @@ import torch
 import random
 import numpy as np
 
-from SnakeGame import SnakeGame, BLOCK_SIZE, DIRECTIONS
+from SnakeGame import SnakeGame, BLOCK_SIZE
+from model import Linear_QNet, QTrainer
 
 MAX_MEMORY = 100000
 ACTIONS = ["STRAIGHT", "RIGHT", "LEFT"]
@@ -11,9 +12,10 @@ class Agent:
     def __init__(self):
         self.count_games = 0
         self.epsilon = 0    # Randomness
+        self.gamma = 0.9    # Discount rate
         self.memory = []
-        self.model = None
-        self.trainer = None
+        self.model = Linear_QNet(11, 200, 3)
+        self.trainer = QTrainer(self.model, lr=0.001, gamma=self.gamma)
 
     def _will_collide(self, game, game_dir, action_dir):
         move_dir = 0
@@ -79,7 +81,8 @@ class Agent:
 if __name__ == "__main__":
     agent = Agent()
     game = SnakeGame()
-    
+    max_score = 0
+
     while True:
         state_old = agent.get_state(game)
         action = agent.get_action(state_old)
@@ -97,3 +100,7 @@ if __name__ == "__main__":
             game.reset()
             agent.count_games += 1
             print(f"Game {agent.count_games} Score: {score}")
+
+            if score > max_score:
+                max_score = score
+                agent.model.save()

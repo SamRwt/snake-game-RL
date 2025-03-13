@@ -4,6 +4,7 @@ import random
 HEIGHT = 600
 WIDTH = 800
 BLOCK_SIZE = 20
+SPEED = 100
 DIRECTIONS = ["RIGHT", "DOWN", "LEFT", "UP"]
 
 class SnakeGame:
@@ -31,48 +32,52 @@ class SnakeGame:
         reward = 0
         game_over = False
 
-        self.move(action)   
-        self.snake.insert(0, self.head)
+        self.move(action)
 
-        if self.food in self.snake:
+        if self.head == self.food:
             reward = 100
             self.score += 1
             self.food = self.create_food()
         else:
             self.snake.pop()
         
-        if self.collision():
+        if self.is_collision(self.head) or self.iteration > 100 * len(self.snake):
             reward = -100
             game_over = True
         
+        self.update_display()
+        self.clock.tick(SPEED)
+
         return reward, game_over, self.score
 
     def create_food(self):
         return [random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE)]
     
     def move(self, action):
-        if (action == 0):       # Move right
-            self.direction = (self.direction + 1) % 4
-        elif (action == 1):     # Move left
-            self.direction = (self.direction - 1) % 4
-        else:                   # Straight
+        if (action[0]):       # Straight
             pass
+        elif (action[1]):     # Move right
+            self.direction = (self.direction + 1) % 4
+        else:                   # Move left
+            self.direction = (self.direction - 1) % 4
 
-
+        new_head = self.head[:]
         if (self.direction == 0):
-            self.head[0] += BLOCK_SIZE
+            new_head[0] += BLOCK_SIZE
         elif (self.direction == 1):
-            self.head[1] += BLOCK_SIZE
+            new_head[1] += BLOCK_SIZE
         elif (self.direction == 2):
-            self.head[0] -= BLOCK_SIZE
+            new_head[0] -= BLOCK_SIZE
         else:
-            self.head[1] -= BLOCK_SIZE            
+            new_head[1] -= BLOCK_SIZE            
 
+        self.snake.insert(0, new_head)
+        self.head = new_head
 
-    def collision(self):
-        if self.head[0] >= WIDTH or self.head[0] < 0 or self.head[1] >= HEIGHT or self.head[1] < 0:
+    def is_collision(self, point):
+        if point[0] >= WIDTH or point[0] < 0 or point[1] >= HEIGHT or point[1] < 0:
             return True
-        if self.head in self.snake[1:]:
+        if point in self.snake[1:]:
             return True
         return False
     
@@ -83,5 +88,6 @@ class SnakeGame:
         
         pygame.draw.rect(self.display, (255, 0, 0), pygame.Rect(self.food[0], self.food[1], BLOCK_SIZE, BLOCK_SIZE))
         
+        self.display.blit(pygame.font.SysFont('Arial', 20).render(f"Score: {self.score}", True, (255, 255, 255)), (10, 10))
         pygame.display.flip()
         self.clock.tick(10)
