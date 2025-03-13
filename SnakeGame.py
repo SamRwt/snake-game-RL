@@ -1,8 +1,10 @@
-import pygame, random
+import pygame
+import random
 
 HEIGHT = 600
 WIDTH = 800
 BLOCK_SIZE = 20
+DIRECTIONS = ["RIGHT", "DOWN", "LEFT", "UP"]
 
 class SnakeGame:
     def __init__(self):
@@ -12,7 +14,7 @@ class SnakeGame:
         self.reset()
     
     def reset(self):
-        self.direction = 'RIGHT'
+        self.direction = 0
         self.head = [WIDTH // 2, HEIGHT // 2]
         self.snake = [self.head, [self.head[0] - BLOCK_SIZE, self.head[1]], [self.head[0] - (2 * BLOCK_SIZE), self.head[1]]]
         self.score = 0
@@ -49,7 +51,37 @@ class SnakeGame:
         return [random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE)]
     
     def move(self, action):
-        pass
+        if (action == 0):       # Move right
+            self.direction = (self.direction + 1) % 4
+        elif (action == 1):     # Move left
+            self.direction = (self.direction - 1) % 4
+        else:                   # Straight
+            pass
+
+
+        if (self.direction == 0):
+            self.head[0] += BLOCK_SIZE
+        elif (self.direction == 1):
+            self.head[1] += BLOCK_SIZE
+        elif (self.direction == 2):
+            self.head[0] -= BLOCK_SIZE
+        else:
+            self.head[1] -= BLOCK_SIZE            
+
 
     def collision(self):
-        pass
+        if self.head[0] >= WIDTH or self.head[0] < 0 or self.head[1] >= HEIGHT or self.head[1] < 0:
+            return True
+        if self.head in self.snake[1:]:
+            return True
+        return False
+    
+    def update_display(self):
+        self.display.fill((0, 0, 0))
+        for block in self.snake:
+            pygame.draw.rect(self.display, (0, 255, 0), pygame.Rect(block[0], block[1], BLOCK_SIZE, BLOCK_SIZE))
+        
+        pygame.draw.rect(self.display, (255, 0, 0), pygame.Rect(self.food[0], self.food[1], BLOCK_SIZE, BLOCK_SIZE))
+        
+        pygame.display.flip()
+        self.clock.tick(10)
