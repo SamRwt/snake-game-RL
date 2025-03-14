@@ -1,6 +1,7 @@
 import torch
 import random
 import numpy as np
+from collections import deque
 
 from SnakeGame import SnakeGame, BLOCK_SIZE
 from model import Linear_QNet, QTrainer
@@ -13,7 +14,7 @@ class Agent:
         self.count_games = 0
         self.epsilon = 0    # Randomness
         self.gamma = 0.9    # Discount rate
-        self.memory = []
+        self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(11, 200, 3)
         self.trainer = QTrainer(self.model, lr=0.001, gamma=self.gamma)
 
@@ -27,7 +28,7 @@ class Agent:
             move_dir = (game_dir - 1) % 4
         
         
-        head = game.snake[0].copy()
+        head = game.snake[0][:]
         if move_dir == 0:
             head[0] += BLOCK_SIZE
         elif move_dir == 1:
@@ -66,7 +67,7 @@ class Agent:
     def get_action(self, state):
         self.epsilon = 100 * np.exp(-0.01 * self.count_games)
         my_action = [0, 0, 0]
-        if random.random() < self.epsilon:
+        if random.randint(0, 100) < self.epsilon:
             action = random.randint(0, 2)
             my_action[action] = 1
         else:
@@ -93,8 +94,6 @@ if __name__ == "__main__":
         agent.trainer.train_step(state_old, action, reward, state_new, game_over)
 
         agent.memory.append((state_old, action, reward, state_new, game_over))
-        if len(agent.memory) > MAX_MEMORY:
-            agent.memory.pop(0)
         
         if game_over:
             game.reset()
